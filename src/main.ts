@@ -1,4 +1,3 @@
-// todo
 function onButtonClick() {
   alert("You clicked the button");
 }
