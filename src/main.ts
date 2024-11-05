@@ -91,16 +91,34 @@ function spawnCache(i: number, j: number) {
 function createCachePopupContent(cache: Cache) {
   const popupDiv = document.createElement("div");
   popupDiv.innerHTML = `
-  <div>There is a cache here at ${
+    <div>There is a cache here at ${
     cache.location.lat.toFixed(
       5,
     )
   }, ${cache.location.lng.toFixed(5)}</div>
-  <div>Coins: ${cache.coins.map((coin) => coin.id).join(", ")}</div>
   `;
+
+  cache.coins.forEach((coin) => {
+    const fixedCoinId = coin.id.replace(/[^a-zA-Z0-9-_]/g, "_");
+
+    const coinDiv = document.createElement("div");
+    coinDiv.innerHTML = `
+      <span>Coin ID: ${coin.id}</span>
+      <button id="collect-${fixedCoinId}">Collect</button>
+    `;
+
+    popupDiv.appendChild(coinDiv);
+
+    coinDiv
+      .querySelector<HTMLButtonElement>(`#collect-${fixedCoinId}`)!
+      .addEventListener("click", () => {
+        console.log(`Collecting coin ${coin.id}`);
+      });
+  });
 
   return popupDiv;
 }
+
 // Look around the player's neighborhood for caches to spawn
 for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
   for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
