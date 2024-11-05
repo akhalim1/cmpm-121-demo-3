@@ -72,7 +72,7 @@ playerMarker.addTo(map);
 // Display the player's points
 //let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
-statusPanel.innerHTML = "No points yet...";
+statusPanel.innerHTML = "inventory:";
 
 // Add caches to the map by cell numbers
 function spawnCache(i: number, j: number) {
@@ -88,7 +88,7 @@ function spawnCache(i: number, j: number) {
     coins: [] as Coin[],
   };
 
-  const numberOfCoins = luck([i, j].toString());
+  const numberOfCoins = Math.floor(luck([i, j].toString()) * 100);
 
   for (let k = 0; k < numberOfCoins; k++) {
     // todo: change this later in d3.b
@@ -107,11 +107,10 @@ function spawnCache(i: number, j: number) {
 function createCachePopupContent(cache: Cache) {
   const popupDiv = document.createElement("div");
   popupDiv.innerHTML = `
-    <div>There is a cache here at ${
-    cache.location.lat.toFixed(
-      5,
-    )
-  }, ${cache.location.lng.toFixed(5)}</div>
+    <div>There is a cache here at 
+      ${cache.location.lat.toFixed(5)}, 
+      ${cache.location.lng.toFixed(5)}
+    </div>
   `;
 
   cache.coins.forEach((coin) => {
@@ -167,11 +166,8 @@ function createCachePopupContent(cache: Cache) {
 
 function updateInventoryDisplay() {
   const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
-  statusPanel.innerHTML = `inventory: ${
-    playerInventory
-      .map((coin) => coin.id)
-      .join(", ")
-  }`;
+  statusPanel.innerHTML = `inventory: 
+  ${playerInventory.map((coin) => coin.id).join(", ")}`;
 }
 
 // Look around the player's neighborhood for caches to spawn
