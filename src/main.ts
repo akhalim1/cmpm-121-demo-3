@@ -30,6 +30,8 @@ const map = leaflet.map(document.getElementById("map")!, {
   scrollWheelZoom: false,
 });
 
+const playerInventory: Coin[] = [];
+
 class Coin {
   constructor(public id: string) {}
 }
@@ -113,10 +115,27 @@ function createCachePopupContent(cache: Cache) {
       .querySelector<HTMLButtonElement>(`#collect-${fixedCoinId}`)!
       .addEventListener("click", () => {
         console.log(`Collecting coin ${coin.id}`);
+
+        cache.coins = cache.coins.filter((c) => c.id !== coin.id);
+        playerInventory.push(coin);
+
+        updateInventoryDisplay();
+
+        const newPopupContent = createCachePopupContent(cache);
+        popupDiv.innerHTML = newPopupContent.innerHTML;
       });
   });
 
   return popupDiv;
+}
+
+function updateInventoryDisplay() {
+  const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
+  statusPanel.innerHTML = `inventory: ${
+    playerInventory
+      .map((coin) => coin.id)
+      .join(", ")
+  }`;
 }
 
 // Look around the player's neighborhood for caches to spawn
