@@ -50,8 +50,22 @@ leaflet
   })
   .addTo(map);
 
+function resolveAssetPath(relativePath: string): string {
+  return import.meta.resolve(`../public/${relativePath}`);
+}
+
+const playerIcon = leaflet.icon({
+  iconUrl: resolveAssetPath("MarkerIcon.png"),
+  iconSize: [32, 32],
+});
+
+const cacheIcon = leaflet.icon({
+  iconUrl: resolveAssetPath("CacheIcon.png"),
+  iconSize: [32, 32],
+});
+
 // Add a marker to represent the player
-const playerMarker = leaflet.marker(OAKES_CLASSROOM);
+const playerMarker = leaflet.marker(OAKES_CLASSROOM, { icon: playerIcon });
 playerMarker.bindTooltip("That's you!");
 playerMarker.addTo(map);
 
@@ -83,7 +97,7 @@ function spawnCache(i: number, j: number) {
   }
 
   // Add a rectangle to the map to represent the cache
-  const rect = leaflet.rectangle(bounds);
+  const rect = leaflet.marker(bounds.getCenter(), { icon: cacheIcon });
   rect.addTo(map);
 
   // Handle interactions with the cache
