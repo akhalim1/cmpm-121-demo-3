@@ -30,6 +30,15 @@ const map = leaflet.map(document.getElementById("map")!, {
   scrollWheelZoom: false,
 });
 
+class Coin {
+  constructor(public id: string) {}
+}
+
+interface Cache {
+  location: leaflet.LatLng;
+  coins: Coin[];
+}
+
 // Populate the map with a background tile layer
 leaflet
   .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -45,7 +54,7 @@ playerMarker.bindTooltip("That's you!");
 playerMarker.addTo(map);
 
 // Display the player's points
-let playerPoints = 0;
+//let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
 statusPanel.innerHTML = "No points yet...";
 
@@ -58,36 +67,40 @@ function spawnCache(i: number, j: number) {
     [origin.lat + (i + 1) * TILE_DEGREES, origin.lng + (j + 1) * TILE_DEGREES],
   ]);
 
+  const cache = {
+    location: bounds.getCenter(),
+    coins: [] as Coin[],
+  };
+
+  const numberOfCoins = luck([i, j].toString());
+
+  for (let k = 0; k < numberOfCoins; k++) {
+    // todo: change this later in d3.b
+    const coinId = `${i}:${j}#${k}`;
+    cache.coins.push(new Coin(coinId));
+  }
+
   // Add a rectangle to the map to represent the cache
   const rect = leaflet.rectangle(bounds);
   rect.addTo(map);
 
   // Handle interactions with the cache
-  rect.bindPopup(() => {
-    // Each cache has a random point value, mutable by the player
-    let pointValue = Math.floor(luck([i, j, "initialValue"].toString()) * 100);
-
-    // The popup offers a description and button
-    const popupDiv = document.createElement("div");
-    popupDiv.innerHTML = `
-                <div>There is a cache here at "${i},${j}". It has value <span id="value">${pointValue}</span>.</div>
-                <button id="poke">poke</button>`;
-
-    // Clicking the button decrements the cache's value and increments the player's points
-    popupDiv
-      .querySelector<HTMLButtonElement>("#poke")!
-      .addEventListener("click", () => {
-        pointValue--;
-        popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-          pointValue.toString();
-        playerPoints++;
-        statusPanel.innerHTML = `${playerPoints} points accumulated`;
-      });
-
-    return popupDiv;
-  });
+  rect.bindPopup(() => createCachePopupContent(cache));
 }
 
+function createCachePopupContent(cache: Cache) {
+  const popupDiv = document.createElement("div");
+  popupDiv.innerHTML = `
+  <div>There is a cache here at ${
+    cache.location.lat.toFixed(
+      5,
+    )
+  }, ${cache.location.lng.toFixed(5)}</div>
+  <div>Coins: ${cache.coins.map((coin) => coin.id).join(", ")}</div>
+  `;
+
+  return popupDiv;
+}
 // Look around the player's neighborhood for caches to spawn
 for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
   for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
