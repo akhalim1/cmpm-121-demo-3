@@ -126,6 +126,28 @@ function createCachePopupContent(cache: Cache) {
       });
   });
 
+  const depositDiv = document.createElement("div");
+  depositDiv.innerHTML = `
+  <div>Deposit a coin from your inventory </div>
+  <button id = "deposit"> Deposit </button>
+  `;
+
+  depositDiv
+    .querySelector<HTMLButtonElement>("#deposit")!
+    .addEventListener("click", () => {
+      if (playerInventory.length > 0) {
+        const coinToDeposit = playerInventory.shift()!;
+
+        cache.coins.push(coinToDeposit);
+
+        updateInventoryDisplay();
+        const newPopupContent = createCachePopupContent(cache);
+        popupDiv.innerHTML = newPopupContent.innerHTML;
+      } else {
+        console.log("No coins in inventory to deposit");
+      }
+    });
+  popupDiv.append(depositDiv);
   return popupDiv;
 }
 
