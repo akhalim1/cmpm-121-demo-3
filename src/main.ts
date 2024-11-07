@@ -105,6 +105,37 @@ function spawnCache(point: leaflet.LatLng) {
   rect.bindPopup(() => createCachePopupContent(cache));
 }
 
+function createCoinElement(
+  coin: Coin,
+  cache: Cache,
+  popupDiv: HTMLElement,
+): HTMLElement {
+  const fixedCoinId = coin.id.replace(/[^a-zA-Z0-9-_]/g, "_");
+  const coinDiv = document.createElement("div");
+  coinDiv.innerHTML = `
+      <span>Coin ID: ${coin.id}</span>
+      <button id="collect-${fixedCoinId}">Collect</button>
+    `;
+
+  coinDiv
+    .querySelector<HTMLButtonElement>(`#collect-${fixedCoinId}`)!
+    .addEventListener("click", () => {
+      collectCoin(coin, cache, popupDiv);
+    });
+  return coinDiv;
+}
+
+function collectCoin(coin: Coin, cache: Cache, popupDiv: HTMLElement) {
+  console.log(`Collecting coin ${coin.id}`);
+  cache.coins = cache.coins.filter((c) => c.id !== coin.id);
+  playerInventory.push(coin);
+
+  updateInventoryDisplay();
+
+  const newPopupContent = createCachePopupContent(cache);
+  popupDiv.innerHTML = newPopupContent.innerHTML;
+}
+
 function createCachePopupContent(cache: Cache) {
   const popupDiv = document.createElement("div");
   popupDiv.innerHTML = `
@@ -115,29 +146,8 @@ function createCachePopupContent(cache: Cache) {
   `;
 
   cache.coins.forEach((coin) => {
-    const fixedCoinId = coin.id.replace(/[^a-zA-Z0-9-_]/g, "_");
-
-    const coinDiv = document.createElement("div");
-    coinDiv.innerHTML = `
-      <span>Coin ID: ${coin.id}</span>
-      <button id="collect-${fixedCoinId}">Collect</button>
-    `;
-
+    const coinDiv = createCoinElement(coin, cache, popupDiv);
     popupDiv.appendChild(coinDiv);
-
-    coinDiv
-      .querySelector<HTMLButtonElement>(`#collect-${fixedCoinId}`)!
-      .addEventListener("click", () => {
-        console.log(`Collecting coin ${coin.id}`);
-
-        cache.coins = cache.coins.filter((c) => c.id !== coin.id);
-        playerInventory.push(coin);
-
-        updateInventoryDisplay();
-
-        const newPopupContent = createCachePopupContent(cache);
-        popupDiv.innerHTML = newPopupContent.innerHTML;
-      });
   });
 
   const depositDiv = document.createElement("div");
