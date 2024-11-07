@@ -11,15 +11,19 @@ import "./leafletWorkaround.ts";
 // Deterministic random number generator
 import luck from "./luck.ts";
 
+import { Board, Cell } from "./board.ts";
 // Location of our classroom (as identified on Google Maps)
 const OAKES_CLASSROOM = leaflet.latLng(36.98949379578401, -122.06277128548504);
 
 // Tunable gameplay parameters
 const GAMEPLAY_ZOOM_LEVEL = 19;
-const TILE_DEGREES = 1e-4;
-const NEIGHBORHOOD_SIZE = 8;
+//const TILE_DEGREES = 1e-4;
+//const NEIGHBORHOOD_SIZE = 8;
 const CACHE_SPAWN_PROBABILITY = 0.1;
+const TILE_WIDTH = 0.0001;
+const TILE_VISIBILITY_RADIUS = 8;
 
+const board = new Board(TILE_WIDTH, TILE_VISIBILITY_RADIUS);
 // Create the map (element with id "map" is defined in index.html)
 const map = leaflet.map(document.getElementById("map")!, {
   center: OAKES_CLASSROOM,
@@ -31,7 +35,6 @@ const map = leaflet.map(document.getElementById("map")!, {
 });
 
 const playerInventory: Coin[] = [];
-
 class Coin {
   constructor(public id: string) {}
 }
@@ -75,29 +78,27 @@ const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // 
 statusPanel.innerHTML = "inventory:";
 
 // Add caches to the map by cell numbers
-function spawnCache(i: number, j: number) {
-  // Convert cell numbers into lat/lng bounds
-  const origin = OAKES_CLASSROOM;
-  const bounds = leaflet.latLngBounds([
-    [origin.lat + i * TILE_DEGREES, origin.lng + j * TILE_DEGREES],
-    [origin.lat + (i + 1) * TILE_DEGREES, origin.lng + (j + 1) * TILE_DEGREES],
-  ]);
+function spawnCache(point: leaflet.LatLng) {
+  const cell: Cell = board.getCellForPoint(point);
+
+  //const origin = OAKES_CLASSROOM;
+  const bounds = board.getCellBound(cell);
+  const cacheLocation = bounds.getCenter();
 
   const cache = {
-    location: bounds.getCenter(),
+    location: cacheLocation,
     coins: [] as Coin[],
   };
 
-  const numberOfCoins = Math.floor(luck([i, j].toString()) * 100);
+  const numberOfCoins = Math.floor(luck(`${cell.i},${cell.j}`) * 100);
 
   for (let k = 0; k < numberOfCoins; k++) {
-    // todo: change this later in d3.b
-    const coinId = `${i}:${j}#${k}`;
+    const coinId = `${cell.i}:${cell.j}#${k}`;
     cache.coins.push(new Coin(coinId));
   }
 
   // Add a rectangle to the map to represent the cache
-  const rect = leaflet.marker(bounds.getCenter(), { icon: cacheIcon });
+  const rect = leaflet.marker(cacheLocation, { icon: cacheIcon });
   rect.addTo(map);
 
   // Handle interactions with the cache
@@ -170,6 +171,7 @@ function updateInventoryDisplay() {
   ${playerInventory.map((coin) => coin.id).join(", ")}`;
 }
 
+/*
 // Look around the player's neighborhood for caches to spawn
 for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
   for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
@@ -179,3 +181,12 @@ for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
     }
   }
 }
+*/
+const nearbyCell = board.getCellsNearPoint(OAKES_CLASSROOM);
+
+nearbyCell.forEach((cell) => {
+  const cellCenter = board.getCellBound(cell).getCenter();
+  if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
+    spawnCache(cellCenter);
+  }
+});
