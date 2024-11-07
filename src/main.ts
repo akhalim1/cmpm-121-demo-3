@@ -136,6 +136,38 @@ function collectCoin(coin: Coin, cache: Cache, popupDiv: HTMLElement) {
   popupDiv.innerHTML = newPopupContent.innerHTML;
 }
 
+function createDepositElement(
+  cache: Cache,
+  popupDiv: HTMLElement,
+): HTMLElement {
+  const depositDiv = document.createElement("div");
+  depositDiv.innerHTML = `
+  <div>Deposit a coin from your inventory </div>
+  <button id = "deposit"> Deposit </button>
+  `;
+
+  depositDiv
+    .querySelector<HTMLButtonElement>("#deposit")!
+    .addEventListener("click", () => {
+      depositCoin(cache, popupDiv);
+    });
+
+  return depositDiv;
+}
+
+function depositCoin(cache: Cache, popupDiv: HTMLElement) {
+  if (playerInventory.length > 0) {
+    const coinToDeposit = playerInventory.shift()!;
+
+    cache.coins.push(coinToDeposit);
+
+    updateInventoryDisplay();
+    const newPopupContent = createCachePopupContent(cache);
+    popupDiv.innerHTML = newPopupContent.innerHTML;
+  } else {
+    console.log("No coins in inventory to deposit");
+  }
+}
 function createCachePopupContent(cache: Cache) {
   const popupDiv = document.createElement("div");
   popupDiv.innerHTML = `
@@ -150,28 +182,8 @@ function createCachePopupContent(cache: Cache) {
     popupDiv.appendChild(coinDiv);
   });
 
-  const depositDiv = document.createElement("div");
-  depositDiv.innerHTML = `
-  <div>Deposit a coin from your inventory </div>
-  <button id = "deposit"> Deposit </button>
-  `;
-
-  depositDiv
-    .querySelector<HTMLButtonElement>("#deposit")!
-    .addEventListener("click", () => {
-      if (playerInventory.length > 0) {
-        const coinToDeposit = playerInventory.shift()!;
-
-        cache.coins.push(coinToDeposit);
-
-        updateInventoryDisplay();
-        const newPopupContent = createCachePopupContent(cache);
-        popupDiv.innerHTML = newPopupContent.innerHTML;
-      } else {
-        console.log("No coins in inventory to deposit");
-      }
-    });
-  popupDiv.append(depositDiv);
+  const depositDiv = createDepositElement(cache, popupDiv);
+  popupDiv.appendChild(depositDiv);
   return popupDiv;
 }
 
