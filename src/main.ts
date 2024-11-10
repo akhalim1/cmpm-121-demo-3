@@ -112,7 +112,21 @@ function movePlayer(direction: string) {
 
   if (newLatLng) {
     playerMarker.setLatLng(newLatLng);
+    updateNearbyCaches();
   }
+}
+
+function updateNearbyCaches() {
+  const playerPosition = playerMarker.getLatLng();
+  const nearbyCells = board.getCellsNearPoint(playerPosition);
+
+  nearbyCells.forEach((cell) => {
+    const cellCenter = board.getCellBound(cell).getCenter();
+
+    if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
+      spawnCache(cellCenter);
+    }
+  });
 }
 
 // Add caches to the map by cell numbers
