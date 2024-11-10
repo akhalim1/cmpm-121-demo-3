@@ -22,6 +22,7 @@ const GAMEPLAY_ZOOM_LEVEL = 19;
 const CACHE_SPAWN_PROBABILITY = 0.1;
 const TILE_WIDTH = 0.0001;
 const TILE_VISIBILITY_RADIUS = 8;
+const MOVE_INCREMENT = 0.0001;
 
 const board = new Board(TILE_WIDTH, TILE_VISIBILITY_RADIUS);
 // Create the map (element with id "map" is defined in index.html)
@@ -76,6 +77,43 @@ playerMarker.addTo(map);
 //let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
 statusPanel.innerHTML = "inventory:";
+
+function movePlayer(direction: string) {
+  const currentPos = playerMarker.getLatLng();
+
+  let newLatLng;
+
+  switch (direction) {
+    case "up":
+      newLatLng = new leaflet.LatLng(
+        currentPos.lat + MOVE_INCREMENT,
+        currentPos.lng,
+      );
+      break;
+    case "down":
+      newLatLng = new leaflet.LatLng(
+        currentPos.lat - MOVE_INCREMENT,
+        currentPos.lng,
+      );
+      break;
+    case "left":
+      newLatLng = new leaflet.LatLng(
+        currentPos.lat,
+        currentPos.lng - MOVE_INCREMENT,
+      );
+      break;
+    case "right":
+      newLatLng = new leaflet.LatLng(
+        currentPos.lat,
+        currentPos.lng + MOVE_INCREMENT,
+      );
+      break;
+  }
+
+  if (newLatLng) {
+    playerMarker.setLatLng(newLatLng);
+  }
+}
 
 // Add caches to the map by cell numbers
 function spawnCache(point: leaflet.LatLng) {
@@ -212,3 +250,19 @@ nearbyCell.forEach((cell) => {
     spawnCache(cellCenter);
   }
 });
+
+document
+  .getElementById("north")!
+  .addEventListener("click", () => movePlayer("up"));
+
+document
+  .getElementById("south")!
+  .addEventListener("click", () => movePlayer("down"));
+
+document
+  .getElementById("west")!
+  .addEventListener("click", () => movePlayer("left"));
+
+document
+  .getElementById("east")!
+  .addEventListener("click", () => movePlayer("right"));
