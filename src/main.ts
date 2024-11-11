@@ -340,3 +340,31 @@ document
 document
   .getElementById("east")!
   .addEventListener("click", () => movePlayer("right"));
+
+let geolocationActive = false;
+let geolocactionWatcherId: number | null = null;
+
+document.getElementById("sensor")!.addEventListener("click", () => {
+  if (navigator.geolocation) {
+    if (!geolocationActive) {
+      geolocationActive = true;
+      geolocactionWatcherId = navigator.geolocation.watchPosition(
+        (position) => {
+          const newLatLng = new leaflet.LatLng(
+            position.coords.latitude,
+            position.coords.longitude,
+          );
+          playerMarker.setLatLng(newLatLng);
+          updateNearbyCaches();
+          //todo: recordPlayerMovement()
+        },
+      );
+    } else {
+      geolocationActive = false;
+      if (geolocactionWatcherId != null) {
+        navigator.geolocation.clearWatch(geolocactionWatcherId);
+        geolocactionWatcherId = null;
+      }
+    }
+  }
+});
