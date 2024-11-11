@@ -23,6 +23,7 @@ const CACHE_SPAWN_PROBABILITY = 0.1;
 const TILE_WIDTH = 0.0001;
 const TILE_VISIBILITY_RADIUS = 8;
 const MOVE_INCREMENT = 0.0001;
+const DEGREES_TO_METERS = 10000;
 
 const board = new Board(TILE_WIDTH, TILE_VISIBILITY_RADIUS);
 // Create the map (element with id "map" is defined in index.html)
@@ -144,7 +145,7 @@ function updateNearbyCaches() {
 
     if (
       playerPosition.distanceTo(cellCenter) >
-        TILE_VISIBILITY_RADIUS * TILE_WIDTH * 10000
+        TILE_VISIBILITY_RADIUS * TILE_WIDTH * DEGREES_TO_METERS
     ) {
       marker.remove();
       activeCacheMarkers.delete(key);
