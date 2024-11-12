@@ -446,5 +446,17 @@ document.getElementById("sensor")!.addEventListener("click", () => {
   }
 });
 
+document.getElementById("reset")!.addEventListener("click", () => {
+  localStorage.clear();
+
+  playerInventory.length = 0;
+  updateInventoryDisplay();
+
+  cacheMementos.clear();
+  movementHistory.length = 0;
+  movementPath.setLatLngs([]);
+  playerMarker.setLatLng(OAKES_CLASSROOM);
+});
+
 globalThis.addEventListener("beforeunload", saveGameState);
 loadGameState();
