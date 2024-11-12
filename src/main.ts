@@ -122,6 +122,12 @@ function saveGameState() {
     cacheMementosObject[key] = value;
   });
   localStorage.setItem("cacheMementos", JSON.stringify(cacheMementosObject));
+
+  const movementHistoryArray = movementHistory.map((pos) => ({
+    lat: pos.lat,
+    lng: pos.lng,
+  }));
+  localStorage.setItem("movementHistory", JSON.stringify(movementHistoryArray));
 }
 
 function loadGameState() {
@@ -176,6 +182,18 @@ function loadGameState() {
         spawnCache(cellCenter);
       }
     });
+  }
+
+  const savedMovementHistory = localStorage.getItem("movementHistory");
+
+  if (savedMovementHistory) {
+    const loadedMovement = JSON.parse(savedMovementHistory);
+    movementHistory.length = 0;
+
+    loadedMovement.forEach((pos: { lat: number; lng: number }) => {
+      movementHistory.push(new leaflet.LatLng(pos.lat, pos.lng));
+    });
+    movementPath.setLatLngs(movementHistory);
   }
 
   console.log("Game state loaded:", {
