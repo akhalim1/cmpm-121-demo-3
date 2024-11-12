@@ -21,7 +21,7 @@ const GAMEPLAY_ZOOM_LEVEL = 19;
 //const NEIGHBORHOOD_SIZE = 8;
 const CACHE_SPAWN_PROBABILITY = 0.1;
 const TILE_WIDTH = 0.0001;
-const TILE_VISIBILITY_RADIUS = 8;
+const TILE_VISIBILITY_RADIUS = 4;
 const MOVE_INCREMENT = 0.0001;
 const DEGREES_TO_METERS = 10000;
 
@@ -97,6 +97,73 @@ playerMarker.addTo(map);
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
 statusPanel.innerHTML = "inventory:";
 
+function saveGameState() {
+  const playerPosition = playerMarker.getLatLng();
+  localStorage.setItem(
+    "playerPosition",
+    JSON.stringify({ lat: playerPosition.lat, lng: playerPosition.lng }),
+  );
+
+  const inventoryIds = playerInventory.map((coin) => coin.id);
+  localStorage.setItem("inventory", JSON.stringify(inventoryIds));
+
+  const cacheMementosObject: { [key: string]: string } = {};
+  cacheMementos.forEach((value, key) => {
+    cacheMementosObject[key] = value;
+  });
+  localStorage.setItem("cacheMementos", JSON.stringify(cacheMementosObject));
+}
+
+function loadGameState() {
+  const savedPos = localStorage.getItem("playerPosition");
+
+  if (savedPos) {
+    const { lat, lng } = JSON.parse(savedPos);
+    playerMarker.setLatLng(new leaflet.LatLng(lat, lng));
+  }
+
+  const savedInventory = localStorage.getItem("inventory");
+  if (savedInventory) {
+    playerInventory.length = 0;
+    JSON.parse(savedInventory).forEach((id: string) =>
+      playerInventory.push(new Coin(id))
+    );
+    updateInventoryDisplay();
+  }
+
+  const savedCacheMementos = localStorage.getItem("cacheMementos");
+  if (savedCacheMementos) {
+    const cacheEntries = JSON.parse(savedCacheMementos);
+    cacheMementos.clear();
+
+    for (const key in cacheEntries) {
+      if (Object.prototype.hasOwnProperty.call(cacheEntries, key)) {
+        const memento = cacheEntries[key];
+        if (typeof memento === "string") {
+          cacheMementos.set(key, memento);
+        } else {
+          console.warn(`Invalid ${key}:`, memento);
+        }
+      }
+    }
+
+    cacheMementos.forEach((memento, key) => {
+      const [i, j] = key.split(",").map(Number);
+      const cell = { i, j };
+      const cellCenter = board.getCellBound(cell).getCenter();
+      const cache = new Cache(cellCenter, []);
+      cache.fromMemento(memento);
+      spawnCache(cellCenter);
+    });
+  }
+
+  console.log("Game state loaded:", {
+    playerPosition: savedPos,
+    inventory: savedInventory,
+    cacheMementos: Array.from(cacheMementos.entries()),
+  });
+}
+
 function movePlayer(direction: string) {
   const currentPos = playerMarker.getLatLng();
 
@@ -167,7 +234,8 @@ function updateNearbyCaches() {
 }
 
 function saveCacheState(cellKey: string, cache: Cache) {
-  cacheMementos.set(cellKey, cache.toMemento());
+  const memento = cache.toMemento();
+  cacheMementos.set(cellKey, memento);
 }
 
 function restoreCacheState(cellKey: string, cache: Cache) {
@@ -180,20 +248,17 @@ function spawnCache(point: leaflet.LatLng): leaflet.Marker {
   const cell: Cell = board.getCellForPoint(point);
   const cellKey = `${cell.i},${cell.j}`;
 
-  // If cache already exists -> restore it
   let cache: Cache;
   if (cacheMementos.has(cellKey)) {
     cache = new Cache(point, []);
     restoreCacheState(cellKey, cache);
   } else {
-    // if no memento exists -> create new Cache
     cache = new Cache(point, []);
     const numberOfCoins = Math.floor(luck([cell.i, cell.j].toString()) * 100);
     for (let k = 0; k < numberOfCoins; k++) {
       const coinId = `${cell.i}:${cell.j}#${k}`;
       cache.coins.push(new Coin(coinId));
     }
-
     saveCacheState(cellKey, cache);
   }
 
@@ -368,3 +433,6 @@ document.getElementById("sensor")!.addEventListener("click", () => {
     }
   }
 });
+
+globalThis.addEventListener("beforeunload", saveGameState);
+loadGameState();
