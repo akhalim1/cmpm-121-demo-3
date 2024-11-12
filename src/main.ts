@@ -125,6 +125,7 @@ function saveGameState() {
 }
 
 function loadGameState() {
+  const playerPosition = playerMarker.getLatLng();
   const savedPos = localStorage.getItem("playerPosition");
 
   if (savedPos) {
@@ -132,7 +133,11 @@ function loadGameState() {
     playerMarker.setLatLng(new leaflet.LatLng(lat, lng));
   }
 
+  activeCacheMarkers.forEach((marker) => marker.remove());
+  activeCacheMarkers.clear();
+
   const savedInventory = localStorage.getItem("inventory");
+
   if (savedInventory) {
     playerInventory.length = 0;
     JSON.parse(savedInventory).forEach((id: string) =>
@@ -142,6 +147,7 @@ function loadGameState() {
   }
 
   const savedCacheMementos = localStorage.getItem("cacheMementos");
+  const maxDistance = TILE_VISIBILITY_RADIUS * TILE_WIDTH * DEGREES_TO_METERS;
 
   if (savedCacheMementos) {
     const cacheEntries = JSON.parse(savedCacheMementos);
@@ -162,9 +168,13 @@ function loadGameState() {
       const [i, j] = key.split(",").map(Number);
       const cell = { i, j };
       const cellCenter = board.getCellBound(cell).getCenter();
-      const cache = new Cache(cellCenter, []);
-      cache.fromMemento(memento);
-      spawnCache(cellCenter);
+      const distance = playerPosition.distanceTo(cellCenter);
+
+      if (distance <= maxDistance) {
+        const cache = new Cache(cellCenter, []);
+        cache.fromMemento(memento);
+        spawnCache(cellCenter);
+      }
     });
   }
 
