@@ -39,6 +39,11 @@ const map = leaflet.map(document.getElementById("map")!, {
 const playerInventory: Coin[] = [];
 const cacheMementos = new Map<string, string>();
 
+const movementHistory: leaflet.LatLng[] = [];
+const movementPath = leaflet
+  .polyline(movementHistory, { color: "blue" })
+  .addTo(map);
+
 class Coin {
   constructor(public id: string) {}
 }
@@ -97,6 +102,11 @@ playerMarker.addTo(map);
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
 statusPanel.innerHTML = "inventory:";
 
+function recordPlayerMovement(newPosition: leaflet.LatLng) {
+  movementHistory.push(newPosition);
+  movementPath.setLatLngs(movementHistory);
+}
+
 function saveGameState() {
   const playerPosition = playerMarker.getLatLng();
   localStorage.setItem(
@@ -132,6 +142,7 @@ function loadGameState() {
   }
 
   const savedCacheMementos = localStorage.getItem("cacheMementos");
+
   if (savedCacheMementos) {
     const cacheEntries = JSON.parse(savedCacheMementos);
     cacheMementos.clear();
@@ -197,6 +208,7 @@ function movePlayer(direction: string) {
   }
 
   if (newLatLng) {
+    recordPlayerMovement(newLatLng);
     playerMarker.setLatLng(newLatLng);
     updateNearbyCaches();
   }
@@ -421,7 +433,7 @@ document.getElementById("sensor")!.addEventListener("click", () => {
           );
           playerMarker.setLatLng(newLatLng);
           updateNearbyCaches();
-          //todo: recordPlayerMovement()
+          recordPlayerMovement(newLatLng);
         },
       );
     } else {
