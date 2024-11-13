@@ -78,7 +78,8 @@ function resolveAssetPath(relativePath: string): string {
   const isGHPage = location.hostname === "akhalim1.github.io";
 
   if (isGHPage) {
-    return `/cmpm-121-demo-3/public/${relativePath}`;
+    console.log(`/cmpm-121-demo-3/${relativePath}`);
+    return `/cmpm-121-demo-3/${relativePath}`;
   } else {
     return import.meta.resolve(`../public/${relativePath}`);
   }
