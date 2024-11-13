@@ -75,7 +75,13 @@ leaflet
   .addTo(map);
 
 function resolveAssetPath(relativePath: string): string {
-  return import.meta.resolve(`../public/${relativePath}`);
+  const isGHPage = location.hostname === "akhalim1.github.io";
+
+  if (isGHPage) {
+    return `https://github.com/akhalim1/cmpm-121-demo-3/public/${relativePath}`;
+  } else {
+    return import.meta.resolve(`../public/${relativePath}`);
+  }
 }
 
 const playerIcon = leaflet.icon({
@@ -154,7 +160,7 @@ function loadPlayerInventory() {
   }
 }
 
-function loadCacheMementos(playerPosition) {
+function loadCacheMementos(playerPosition: leaflet.LatLng) {
   activeCacheMarkers.forEach((marker) => marker.remove());
   activeCacheMarkers.clear();
 
@@ -213,7 +219,7 @@ function saveGameState() {
 }
 
 function loadGameState() {
-  const playerPosition = playerMarker.getLatLng();
+  const playerPosition: leaflet.LatLng = playerMarker.getLatLng();
   loadPlayerInventory();
   loadPlayerPosition();
   loadCacheMementos(playerPosition);
