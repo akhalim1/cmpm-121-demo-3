@@ -4,8 +4,6 @@ import leaflet from "leaflet";
 // Style sheets
 import "leaflet/dist/leaflet.css";
 import "./style.css";
-
-// Fix missing marker images
 import "./leafletWorkaround.ts";
 
 // Deterministic random number generator
@@ -106,27 +104,41 @@ function recordPlayerMovement(newPosition: leaflet.LatLng) {
   movementPath.setLatLngs(movementHistory);
 }
 
-function saveGameState() {
+// save functions
+function savePlayerInventory() {
+  const inventoryIds = playerInventory.map((coin) => coin.id);
+  localStorage.setItem("inventory", JSON.stringify(inventoryIds));
+}
+
+function savePlayerPosition() {
   const playerPosition = playerMarker.getLatLng();
   localStorage.setItem(
     "playerPosition",
     JSON.stringify({ lat: playerPosition.lat, lng: playerPosition.lng }),
   );
+}
 
-  const inventoryIds = playerInventory.map((coin) => coin.id);
-  localStorage.setItem("inventory", JSON.stringify(inventoryIds));
-
+function saveCacheMementos() {
   const cacheMementosObject: { [key: string]: string } = {};
   cacheMementos.forEach((value, key) => {
     cacheMementosObject[key] = value;
   });
   localStorage.setItem("cacheMementos", JSON.stringify(cacheMementosObject));
+}
 
+function saveMovementHistory() {
   const movementHistoryArray = movementHistory.map((pos) => ({
     lat: pos.lat,
     lng: pos.lng,
   }));
   localStorage.setItem("movementHistory", JSON.stringify(movementHistoryArray));
+}
+
+function saveGameState() {
+  savePlayerInventory();
+  savePlayerPosition();
+  saveCacheMementos();
+  saveMovementHistory();
 }
 
 function loadGameState() {
@@ -202,6 +214,7 @@ function loadGameState() {
   });
 }
 
+// player movement
 function movePlayer(direction: string) {
   const currentPos = playerMarker.getLatLng();
 
@@ -241,6 +254,7 @@ function movePlayer(direction: string) {
   }
 }
 
+// cache management functions
 function updateNearbyCaches() {
   const playerPosition = playerMarker.getLatLng();
   const nearbyCells = board.getCellsNearPoint(playerPosition);
@@ -310,6 +324,7 @@ function spawnCache(point: leaflet.LatLng): leaflet.Marker {
   return marker;
 }
 
+// deposit/collect coins
 function createCoinElement(
   coin: Coin,
   cache: Cache,
