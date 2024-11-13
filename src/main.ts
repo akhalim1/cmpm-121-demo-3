@@ -104,7 +104,6 @@ function recordPlayerMovement(newPosition: leaflet.LatLng) {
   movementPath.setLatLngs(movementHistory);
 }
 
-// save functions
 function savePlayerInventory() {
   const inventoryIds = playerInventory.map((coin) => coin.id);
   localStorage.setItem("inventory", JSON.stringify(inventoryIds));
@@ -134,25 +133,16 @@ function saveMovementHistory() {
   localStorage.setItem("movementHistory", JSON.stringify(movementHistoryArray));
 }
 
-function saveGameState() {
-  savePlayerInventory();
-  savePlayerPosition();
-  saveCacheMementos();
-  saveMovementHistory();
-}
-
-function loadGameState() {
-  const playerPosition = playerMarker.getLatLng();
+function loadPlayerPosition() {
   const savedPos = localStorage.getItem("playerPosition");
 
   if (savedPos) {
     const { lat, lng } = JSON.parse(savedPos);
     playerMarker.setLatLng(new leaflet.LatLng(lat, lng));
   }
+}
 
-  activeCacheMarkers.forEach((marker) => marker.remove());
-  activeCacheMarkers.clear();
-
+function loadPlayerInventory() {
   const savedInventory = localStorage.getItem("inventory");
 
   if (savedInventory) {
@@ -162,6 +152,11 @@ function loadGameState() {
     );
     updateInventoryDisplay();
   }
+}
+
+function loadCacheMementos(playerPosition) {
+  activeCacheMarkers.forEach((marker) => marker.remove());
+  activeCacheMarkers.clear();
 
   const savedCacheMementos = localStorage.getItem("cacheMementos");
   const maxDistance = TILE_VISIBILITY_RADIUS * TILE_WIDTH * DEGREES_TO_METERS;
@@ -194,7 +189,9 @@ function loadGameState() {
       }
     });
   }
+}
 
+function loadMovementHistory() {
   const savedMovementHistory = localStorage.getItem("movementHistory");
 
   if (savedMovementHistory) {
@@ -206,12 +203,21 @@ function loadGameState() {
     });
     movementPath.setLatLngs(movementHistory);
   }
+}
 
-  console.log("Game state loaded:", {
-    playerPosition: savedPos,
-    inventory: savedInventory,
-    cacheMementos: Array.from(cacheMementos.entries()),
-  });
+function saveGameState() {
+  savePlayerInventory();
+  savePlayerPosition();
+  saveCacheMementos();
+  saveMovementHistory();
+}
+
+function loadGameState() {
+  const playerPosition = playerMarker.getLatLng();
+  loadPlayerInventory();
+  loadPlayerPosition();
+  loadCacheMementos(playerPosition);
+  loadMovementHistory();
 }
 
 // player movement
