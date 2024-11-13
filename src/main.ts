@@ -17,16 +17,15 @@ const OAKES_CLASSROOM = leaflet.latLng(36.98949379578401, -122.06277128548504);
 
 // Tunable gameplay parameters
 const GAMEPLAY_ZOOM_LEVEL = 19;
-//const TILE_DEGREES = 1e-4;
-//const NEIGHBORHOOD_SIZE = 8;
 const CACHE_SPAWN_PROBABILITY = 0.1;
 const TILE_WIDTH = 0.0001;
 const TILE_VISIBILITY_RADIUS = 4;
 const MOVE_INCREMENT = 0.0001;
 const DEGREES_TO_METERS = 10000;
 
+// game state initialization
 const board = new Board(TILE_WIDTH, TILE_VISIBILITY_RADIUS);
-// Create the map (element with id "map" is defined in index.html)
+
 const map = leaflet.map(document.getElementById("map")!, {
   center: OAKES_CLASSROOM,
   zoom: GAMEPLAY_ZOOM_LEVEL,
@@ -44,6 +43,7 @@ const movementPath = leaflet
   .polyline(movementHistory, { color: "blue" })
   .addTo(map);
 
+// classes
 class Coin {
   constructor(public id: string) {}
 }
@@ -67,7 +67,7 @@ class Cache {
   }
 }
 
-// Populate the map with a background tile layer
+// map and icon initialization
 leaflet
   .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -90,18 +90,17 @@ const cacheIcon = leaflet.icon({
   iconSize: [32, 32],
 });
 
+// player and cache markers
 const activeCacheMarkers = new Map<string, leaflet.Marker>();
 
-// Add a marker to represent the player
 const playerMarker = leaflet.marker(OAKES_CLASSROOM, { icon: playerIcon });
 playerMarker.bindTooltip("That's you!");
 playerMarker.addTo(map);
 
-// Display the player's points
-//let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
 statusPanel.innerHTML = "inventory:";
 
+// game state functions
 function recordPlayerMovement(newPosition: leaflet.LatLng) {
   movementHistory.push(newPosition);
   movementPath.setLatLngs(movementHistory);
@@ -410,17 +409,6 @@ function updateInventoryDisplay() {
   ${playerInventory.map((coin) => coin.id).join(", ")}`;
 }
 
-/*
-// Look around the player's neighborhood for caches to spawn
-for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
-  for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
-    // If location i,j is lucky enough, spawn a cache!
-    if (luck([i, j].toString()) < CACHE_SPAWN_PROBABILITY) {
-      spawnCache(i, j);
-    }
-  }
-}
-*/
 const nearbyCell = board.getCellsNearPoint(OAKES_CLASSROOM);
 
 nearbyCell.forEach((cell) => {
@@ -430,6 +418,7 @@ nearbyCell.forEach((cell) => {
   }
 });
 
+// event listeners
 document
   .getElementById("north")!
   .addEventListener("click", () => movePlayer("up"));
@@ -486,5 +475,6 @@ document.getElementById("reset")!.addEventListener("click", () => {
   playerMarker.setLatLng(OAKES_CLASSROOM);
 });
 
+// final setup
 globalThis.addEventListener("beforeunload", saveGameState);
 loadGameState();
