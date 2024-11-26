@@ -10,6 +10,8 @@ import "./leafletWorkaround.ts";
 import luck from "./luck.ts";
 
 import { Board, Cell } from "./board.ts";
+import { UIController } from "./uiController.ts";
+
 // Location of our classroom (as identified on Google Maps)
 const OAKES_CLASSROOM = leaflet.latLng(36.98949379578401, -122.06277128548504);
 
@@ -446,22 +448,9 @@ nearbyCell.forEach((cell) => {
   }
 });
 
-// event listeners
-document
-  .getElementById("north")!
-  .addEventListener("click", () => movePlayer("up"));
-
-document
-  .getElementById("south")!
-  .addEventListener("click", () => movePlayer("down"));
-
-document
-  .getElementById("west")!
-  .addEventListener("click", () => movePlayer("left"));
-
-document
-  .getElementById("east")!
-  .addEventListener("click", () => movePlayer("right"));
+// UIController
+const uiController = new UIController(movePlayer);
+uiController.initializeControls();
 
 let geolocationActive = false;
 let geolocactionWatcherId: number | null = null;
