@@ -1,6 +1,3 @@
 export default {
-  root: "./",
-  build: {
-    outDir: "./dist",
-  },
+  base: Deno.env.get("REPO_NAME") || "/project",
 };
