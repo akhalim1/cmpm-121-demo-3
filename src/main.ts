@@ -11,6 +11,7 @@ import luck from "./luck.ts";
 
 import { Board, Cell } from "./board.ts";
 import { UIController } from "./uiController.ts";
+import { GeolocationManager } from "./geolocationManager.ts";
 
 // Location of our classroom (as identified on Google Maps)
 const OAKES_CLASSROOM = leaflet.latLng(36.98949379578401, -122.06277128548504);
@@ -452,31 +453,22 @@ nearbyCell.forEach((cell) => {
 const uiController = new UIController(movePlayer);
 uiController.initializeControls();
 
+// GeolocationManager
+const geolocationManager = new GeolocationManager(
+  playerMarker,
+  recordPlayerMovement,
+  updateNearbyCaches,
+);
+
 let geolocationActive = false;
-let geolocactionWatcherId: number | null = null;
 
 document.getElementById("sensor")!.addEventListener("click", () => {
-  if (navigator.geolocation) {
-    if (!geolocationActive) {
-      geolocationActive = true;
-      geolocactionWatcherId = navigator.geolocation.watchPosition(
-        (position) => {
-          const newLatLng = new leaflet.LatLng(
-            position.coords.latitude,
-            position.coords.longitude,
-          );
-          playerMarker.setLatLng(newLatLng);
-          updateNearbyCaches();
-          recordPlayerMovement(newLatLng);
-        },
-      );
-    } else {
-      geolocationActive = false;
-      if (geolocactionWatcherId != null) {
-        navigator.geolocation.clearWatch(geolocactionWatcherId);
-        geolocactionWatcherId = null;
-      }
-    }
+  if (!geolocationActive) {
+    geolocationManager.startGeolocation();
+    geolocationActive = true;
+  } else {
+    geolocationManager.stopGeolocation();
+    geolocationActive = false;
   }
 });
 
